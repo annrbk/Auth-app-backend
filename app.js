@@ -19,7 +19,7 @@ const db = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5,
   queueLimit: 0
 });
 
@@ -51,6 +51,13 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+app.get("/ping", (req, res) => {
+  return res
+          .status(201)
+          .json({ message: "Pong!" });
+})
+
 
 app.post("/register", (req, res) => {
   const { username, email, password } = req.body;
