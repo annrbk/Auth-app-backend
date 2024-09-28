@@ -13,20 +13,25 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER, 
-  database: process.env.DB_NAME, 
+const db = mysql.createPool({
+  host: process.env.DB_HOST, 
+  user: process.env.DB_USERNAME, 
   password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((error) => {
+db.getConnection((error) => {
   if (error) {
     console.log("Error:", error);
     return;
   }
   console.log("Connected to MySQL database");
 });
+
+db.promise()
 
 const hashPassword = (password) => {
   return crypto.createHash("sha3-256").update(password).digest("hex");
