@@ -11,7 +11,13 @@ const PORT = 5000;
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+const corsOptions = {
+  origin: process.env.CORS_LINK,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 const db = mysql.createPool({
   host: process.env.DB_HOST, 
@@ -58,8 +64,7 @@ app.get("/ping", (req, res) => {
           .json({ message: "Pong!" });
 })
 
-
-app.post("/register", (req, res) => {
+app.post("/register", cors(corsOptions), (req, res) => {
   const { username, email, password } = req.body;
   const hashedPassword = hashPassword(password);
   const isBlocked = false;
@@ -95,7 +100,7 @@ app.post("/register", (req, res) => {
   });
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", cors(corsOptions), (req, res) => {
   const { email, password } = req.body;
   const hashedPassword = hashPassword(password);
 
@@ -126,11 +131,11 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.get("/api/validateToken", authenticateToken, (req, res) => {
+app.get("/api/validateToken", [authenticateToken, cors(corsOptions)], (req, res) => {
   res.status(200).json({ message: "Token is valid" });
 });
 
-app.get("/users", authenticateToken, (req, res) => {
+app.get("/users", [authenticateToken, cors(corsOptions)], (req, res) => {
   const query = "SELECT * FROM users";
   db.query(query, (err, result) => {
     if (err) {
@@ -140,7 +145,7 @@ app.get("/users", authenticateToken, (req, res) => {
   });
 });
 
-app.put("/api/users/block/:id", authenticateToken, (req, res) => {
+app.put("/api/users/block/:id", [authenticateToken, cors(corsOptions)], (req, res) => {
   const userId = req.params.id;
   const query = "UPDATE users SET is_blocked = true WHERE id = ?";
 
@@ -152,7 +157,7 @@ app.put("/api/users/block/:id", authenticateToken, (req, res) => {
   });
 });
 
-app.put("/api/users/unblock/:id", authenticateToken, (req, res) => {
+app.put("/api/users/unblock/:id", [authenticateToken, cors(corsOptions)], (req, res) => {
   const userId = req.params.id;
   const query = "UPDATE users SET is_blocked = false WHERE id = ?";
 
@@ -164,7 +169,7 @@ app.put("/api/users/unblock/:id", authenticateToken, (req, res) => {
   });
 });
 
-app.delete("/api/users/delete/:id", authenticateToken, (req, res) => {
+app.delete("/api/users/delete/:id", [authenticateToken, cors(corsOptions)], (req, res) => {
   const userId = req.params.id;
   const query = "DELETE FROM users WHERE id = ?";
 
