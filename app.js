@@ -98,7 +98,7 @@ app.post("/register", cors(corsOptions), (req, res) => {
       [username, email, hashedPassword, isBlocked, registrationDate, lastLogin],
       (err, result) => {
         if (err) {
-          logger.error("Error to insert user", err.message)
+          logger.error(err.message)
           return res.status(500).json({ message: err.message});
         }
         return res
