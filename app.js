@@ -4,6 +4,9 @@ const cors = require("cors");
 const crypto = require("crypto");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const { createLogger } = require("winston");
+
+const logger = createLogger();
 
 dotenv.config();
 
@@ -31,10 +34,10 @@ const db = mysql.createPool({
 
 db.getConnection((error) => {
   if (error) {
-    console.log("Error:", error);
+    logger.info("Error:", error);
     return;
   }
-  console.log("Connected to MySQL database");
+  logger.info("Connected to MySQL database");
 });
 
 db.promise()
@@ -65,6 +68,7 @@ app.get("/ping", (req, res) => {
 })
 
 app.post("/register", cors(corsOptions), (req, res) => {
+  logger.info("I'm in register")
   const { username, email, password } = req.body;
   const hashedPassword = hashPassword(password);
   const isBlocked = false;
@@ -73,6 +77,8 @@ app.post("/register", cors(corsOptions), (req, res) => {
     .replace("T", " ")
     .substring(0, 19);
   const lastLogin = null;
+
+  logger.info("I'm before db query")
 
   const checkUniqueEmail = "SELECT * FROM users WHERE email = ?";
   db.query(checkUniqueEmail, [email], (checkErr, checkRes) => {
@@ -83,6 +89,8 @@ app.post("/register", cors(corsOptions), (req, res) => {
       return res.status(400).json({ message: "Email already in use" });
     }
 
+    logger.info("I'm in db query and after validation")
+
     const query =
       "INSERT INTO users(username, email, password, is_blocked, registration_date, last_login) VALUES (?, ?, ?, ?, ?, ?)";
     db.query(
@@ -90,7 +98,8 @@ app.post("/register", cors(corsOptions), (req, res) => {
       [username, email, hashedPassword, isBlocked, registrationDate, lastLogin],
       (err, result) => {
         if (err) {
-          return res.status(500).json({ message: "Error registering user" });
+          logger.error("Error to insert user")
+          return res.status(500).json({ message: err.message});
         }
         return res
           .status(201)
@@ -182,5 +191,5 @@ app.delete("/api/users/delete/:id", [authenticateToken, cors(corsOptions)], (req
 });
 
 app.listen(PORT, () => {
-  console.log(`Application listening on port ${PORT}!`);
+  logger.info(`Application listening on port ${PORT}!`);
 });
